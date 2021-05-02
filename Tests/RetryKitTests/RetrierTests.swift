@@ -49,13 +49,27 @@ final class RetrierTests: XCTestCase {
         }
     }
     
-    func testCallsCompletionClosure() {
+    func testCallsCompletionClosureWhenTaskSucceeds() {
         let task = Task<Void>(maximumAttempts: 2, work: {
             $0(())
         }, outputValidation: { false })
         let retrier = Retrier(dispatchQueue: .main)
         
-        let expectation = XCTestExpectation(description: "Should call completion closure when succeeds")
+        let expectation = XCTestExpectation(description: "Should call completion when succeeds")
+        retrier.begin(task) {
+            expectation.fulfill()
+        }
+        
+        wait(for: [expectation], timeout: 1.0)
+    }
+    
+    func testCallsCompletionClosureWhenTaskFails() {
+        let task = Task<Void>(maximumAttempts: 2, work: {
+            $0(())
+        }, outputValidation: { true })
+        let retrier = Retrier(dispatchQueue: .main)
+        
+        let expectation = XCTestExpectation(description: "Should call completion when fails")
         retrier.begin(task) {
             expectation.fulfill()
         }
